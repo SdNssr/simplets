@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SimpleTS</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <style>
+        /* From https://projects.lukehaas.me/css-loaders/ */
+        .loader,
+        .loader:after {
+            border-radius: 50%;
+            width: 10em;
+            height: 10em;
+        }
+
+        .loader {
+            margin: 60px auto;
+            font-size: 10px;
+            position: relative;
+            text-indent: -9999em;
+            border-top: 1.1em solid rgba(63,81,181, 0.2);
+            border-right: 1.1em solid rgba(63,81,181, 0.2);
+            border-bottom: 1.1em solid rgba(63,81,181, 0.2);
+            border-left: 1.1em solid #3f51b5;
+            -webkit-transform: translateZ(0);
+            -ms-transform: translateZ(0);
+            transform: translateZ(0);
+            -webkit-animation: load8 1.1s infinite linear;
+            animation: load8 1.1s infinite linear;
+        }
+
+        @-webkit-keyframes load8 {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes load8 {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* Material design palette */
+        .dark-primary-color    { background: #303F9F; }
+        .default-primary-color { background: #3F51B5; }
+        .light-primary-color   { background: #C5CAE9; }
+        .text-primary-color    { color: #FFFFFF; }
+        .accent-color          { background: #FF5252; }
+        .primary-text-color    { color: #212121; }
+        .secondary-text-color  { color: #757575; }
+        .divider-color         { border-color: #BDBDBD; }
+        
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-size: 18px;
+            font-family: "Open Sans";
+        }
+        
+        .loader_container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 60px);
+            width: 100%;
+        }
+
+        .settings {
+            display: flex;
+            padding: 18px 12px 18px 12px;
+            justify-content: space-between;
+            color: #FFFFFF;
+            background-color: #3F51B5;
+        }
+        
+        .settings label {
+            padding: 0 12px 0 12px;
+        }
+
+        .settings select {
+            display: inline;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 0px;
+            background-color: #3F51B5;
+
+            font-size: 18px;
+        }
+
+        .data {
+            height: calc(100vh - 60px);
+            width: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .data img {
+            margin: auto;
+            max-height: 100%;
+            max-width: 100%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="settings">
+            <label>
+                Series:
+                <select v-model="selected_series">
+                    <option v-for="serie in series" v-bind:value="serie">
+                        {{ serie }}
+                    </option>
+                </select>
+            </label>
+
+            <label>
+                Duration:
+                <select v-model="selected_duration">
+                    <option v-for="duration in durations" :value="duration.actual">
+                        {{ duration.display }}
+                    </option>
+                </select>
+            </label>
+
+        </div>
+        
+        <div v-if="!loading" class="data">
+            <img v-if="!error" :src="currentGraph" alt="graph" @error="imageError">
+            <p v-if="error">{{ error }}</p>
+        </div>
+
+        <div v-if="loading" class="loader_container">
+            <div class="loader">Loading...</div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                error: "",
+                currentGraph: "",
+                loading: true,
+                selected_duration: '15m',
+                selected_series: 't0',
+                durations: [
+                    { display: '5m', actual: '5m' },
+                    { display: '15m', actual: '15m' },
+                    { display: '1h', actual: '1h' },
+                    { display: '6h', actual: '6h' },
+                    { display: '1d', actual: '24h' },
+                    { display: '1w', actual: '168h' },
+                ],
+                series: [
+                    't0',
+                    't1',
+                    't2'
+                ],
+            },
+            methods: {
+                imageError: function (image) {
+                    app.loading = false;
+                    app.error = "Unable to create graph. Try expanding the time range.";
+                },
+            },
+            beforeMount: function () {
+                var request = new XMLHttpRequest();
+                request.open('GET', '/api/series', true);
+
+                request.onload = function() {
+                    if (this.status >= 200 && this.status < 400) {
+                        app.series = JSON.parse(this.response);
+                        app.selected_series = app.series[0];
+                        app.loading = false;
+                        app.error = "";
+                    } else {
+                        app.loading = false;
+                        app.error = "Unable to get API response: " + this.response;
+                    }
+                };
+
+                request.onerror = function() {
+                    app.loading = false;
+                    app.error = "Unable to get API response: " + this.response;
+                }
+
+                request.send();
+            },
+            beforeUpdate: function () {
+                newGraph = "/api/series/" + app.selected_series + "?duration=" + app.selected_duration;
+
+                if (newGraph != app.currentGraph) {
+                    app.currentGraph = newGraph;
+                    app.error = "";
+                }
+            },
+        })
+    </script>
+</body>
+</html>
