@@ -4,7 +4,6 @@ import (
 	"github.com/boltdb/bolt"
 	"time"
 	"log"
-	"fmt"
 )
 
 func main() {
