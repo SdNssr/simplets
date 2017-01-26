@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/julienschmidt/httprouter"
-	"github.com/wcharczuk/go-chart"
-	"github.com/urfave/negroni"
 	"encoding/json"
-	"net/http"
 	"fmt"
+	"github.com/julienschmidt/httprouter"
+	"github.com/urfave/negroni"
+	"github.com/wcharczuk/go-chart"
 	"log"
+	"net/http"
 )
 
 func (env ServerEnv) ApiGetSeries(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -35,11 +35,11 @@ func (env ServerEnv) ApiGetDataPoints(w http.ResponseWriter, r *http.Request, p 
 	w.Header().Set("Content-Type", "image/png")
 
 	graph := chart.Chart{
-		Width: 2048,
+		Width:  2048,
 		Height: 800,
-		DPI: 192,
+		DPI:    192,
 		XAxis: chart.XAxis{
-			Style: chart.StyleShow(),
+			Style:          chart.StyleShow(),
 			ValueFormatter: chart.TimeMinuteValueFormatter,
 		},
 		YAxis: chart.YAxis{

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/boltdb/bolt"
 	"bytes"
-	"time"
 	"fmt"
+	"github.com/boltdb/bolt"
+	"time"
 )
 
 type Datapoints struct {
@@ -17,7 +17,7 @@ type ServerEnv struct {
 }
 
 type DataPoint struct {
-	Value  float64
+	Value float64
 }
 
 func (env ServerEnv) GetSeries() ([]string, error) {

@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/boltdb/bolt"
-	"time"
 	"log"
+	"time"
 )
 
 func main() {
@@ -15,5 +15,5 @@ func main() {
 
 	defer db.Close()
 
-	ServeAPI(ServerEnv{ db: db })
+	ServeAPI(ServerEnv{db: db})
 }
